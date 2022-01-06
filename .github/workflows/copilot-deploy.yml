@@ -1,0 +1,59 @@
+# Deploy a project using AWS Copilot, with support for assuming an IAM role using AWS key/secret creds.
+name: Copilot Deploy
+
+on:
+  workflow_call:
+    inputs:
+      git_ref:
+        description: The git ref (tag, branch, commit SHA, etc) to deploy. Defaults to the current ref.
+        required: false
+        type: string
+      environment:
+        description: The app environment to deploy to
+        required: true
+        type: string
+      service:
+        description: The copilot service to deploy (if more than one in the repo)
+        required: false
+        type: string
+      role_to_assume:
+        description: The IAM role to assume using the key/secret creds
+        required: true
+        type: string
+      aws_region:
+        required: false
+        type: string
+        default: us-west-2
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ inputs.role_to_assume }}
+          role-duration-seconds: 3600
+          role-session-name: GithubActionDeploy
+
+      - name: Setup AWS Copilot
+        uses: flemzord/setup-aws-copilot@v1.3
+
+      - name: Copilot Deploy
+        run: copilot deploy -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }}
