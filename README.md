@@ -4,7 +4,7 @@ GitHub metadata and shared workflows. The repo name `.github` has special signif
 
 ## Shared Workflows
 
-GitHub requires shared workflows to be in a public repo, we are storing them in here. These workflows are specific to Lumio and aren't believed to be generally useful outside our organziation, but they are MIT licensed.
+GitHub requires shared workflows to be in a public repo, we are storing them in here. These workflows are specific to Lumio and aren't believed to be generally useful outside our organziation, but they are [MIT licensed](LICENSE).
 
 ## Starter Workflows
 
