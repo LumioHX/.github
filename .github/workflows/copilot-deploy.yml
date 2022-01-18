@@ -24,6 +24,10 @@ on:
         required: false
         type: string
         default: us-west-2
+      post_deploy_exec:
+        description: Post-deploy command to run with `copilot svc exec`
+        required: false
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -57,3 +61,7 @@ jobs:
 
       - name: Copilot Deploy
         run: copilot deploy -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }}
+
+      - name: Post-Deploy
+        if: ${{ inputs.post_deploy_exec }}
+        run: copilot svc exec -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }} -c '${{ inputs.post_deploy_exec }}'
