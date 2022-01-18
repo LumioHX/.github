@@ -41,6 +41,9 @@ jobs:
     environment: ${{ inputs.environment }}
 
     steps:
+      - name: Install Deps
+        run: sudo apt-get install expect
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -64,4 +67,6 @@ jobs:
 
       - name: Post-Deploy
         if: ${{ inputs.post_deploy_exec }}
-        run: copilot svc exec -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }} -c '${{ inputs.post_deploy_exec }}'
+        # AWS SSM doesn't like non-TTY shells, this workaround
+        # is discussed at https://github.com/aws/amazon-ssm-agent/issues/354
+        run: unbuffer copilot svc exec -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }} -c '${{ inputs.post_deploy_exec }}'
