@@ -42,7 +42,8 @@ jobs:
 
     steps:
       - name: Install Deps
-        run: sudo apt-get install expect
+        if: ${{ inputs.post_deploy_exec }}
+        run: sudo apt-get install -y expect
 
       - name: Checkout
         uses: actions/checkout@v2
