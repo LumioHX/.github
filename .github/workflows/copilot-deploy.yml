@@ -20,16 +20,16 @@ on:
         description: The IAM role to assume using the key/secret creds
         required: true
         type: string
+      second_role_to_assume:
+        description: A 2nd IAM role in the chain
+        required: false
+        type: string
       aws_region:
         required: false
         type: string
         default: us-west-2
       post_deploy_exec:
         description: Post-deploy command to run with `copilot svc exec`
-        required: false
-        type: string
-      second_role_to_assume:
-        description: A 2nd IAM role in the chain
         required: false
         type: string
     secrets:
