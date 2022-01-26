@@ -28,11 +28,6 @@ on:
         required: false
         type: string
         default: us-west-2
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
-        required: false
 
 jobs:
   cancel:
@@ -50,8 +45,6 @@ jobs:
       - name: Assume App Role
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws_region }}
           role-to-assume: ${{ inputs.role_to_assume }}
           role-duration-seconds: 3600
