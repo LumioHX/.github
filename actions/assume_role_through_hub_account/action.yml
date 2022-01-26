@@ -16,6 +16,9 @@ inputs:
     description: Optional session name to log in IAM, describing what this workflow is doing
     required: false
     default: GithubAction
+  role_duration_seconds:
+    description: "Role duration in seconds (default: 6 hours)"
+    required: false
 
 runs:
   using: "composite"
@@ -25,7 +28,7 @@ runs:
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.hub_account_role }}
-        role-duration-seconds: 3600
+        role-duration-seconds: ${{ inputs.role_duration_seconds }}
         role-session-name: ${{ inputs.session_name }}
 
     - name: Assume Target Account Role
@@ -33,7 +36,7 @@ runs:
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.target_account_role }}
-        role-duration-seconds: 3600
+        role-duration-seconds: ${{ inputs.role_duration_seconds }}
         role-session-name: ${{ inputs.session_name }}
         aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
