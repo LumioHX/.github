@@ -17,9 +17,9 @@ inputs:
     required: false
     default: GithubAction
   role_duration_seconds:
-    description: "Role duration in seconds (default: 6 hours)"
+    description: "Role duration in seconds (default: 1 hour)"
     required: false
-    default: "21600"
+    default: "3600"
 
 runs:
   using: "composite"
