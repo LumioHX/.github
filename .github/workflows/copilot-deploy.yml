@@ -57,7 +57,7 @@ jobs:
         with:
           ref: ${{ inputs.git_ref }}
 
-      - name: Configure AWS Credentials
+      - name: Assume Hub Account Role
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ inputs.aws_region }}
@@ -65,8 +65,7 @@ jobs:
           role-duration-seconds: 3600
           role-session-name: GithubActionDeploy
 
-      - name: Configure AWS Credentials pt2
-        if: ${{ inputs.second_role_to_assume }}
+      - name: Assume App Account Role
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ inputs.aws_region }}
