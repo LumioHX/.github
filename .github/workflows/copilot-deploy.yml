@@ -18,10 +18,18 @@ on:
         type: string
       role_to_assume:
         description: The IAM role to assume using the key/secret creds
-        required: true
+        required: false
         type: string
       second_role_to_assume:
         description: A 2nd IAM role in the chain
+        required: false
+        type: string
+      hub_account_role:
+        description: The first role we assume, into the central hub account
+        required: false
+        type: string
+      app_account_role:
+        description: The second role we assume, into the copilot app account
         required: false
         type: string
       aws_region:
@@ -53,7 +61,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ inputs.aws_region }}
-          role-to-assume: ${{ inputs.role_to_assume }}
+          role-to-assume: ${{ inputs.hub_account_role || inputs.role_to_assume }}
           role-duration-seconds: 3600
           role-session-name: GithubActionDeploy
 
@@ -62,7 +70,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ inputs.aws_region }}
-          role-to-assume: ${{ inputs.second_role_to_assume }}
+          role-to-assume: ${{ inputs.app_account_role || inputs.second_role_to_assume }}
           role-duration-seconds: 3600
           role-session-name: GithubActionDeploy
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
