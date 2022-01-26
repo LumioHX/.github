@@ -19,6 +19,7 @@ inputs:
   role_duration_seconds:
     description: "Role duration in seconds (default: 6 hours)"
     required: false
+    default: "21600"
 
 runs:
   using: "composite"
