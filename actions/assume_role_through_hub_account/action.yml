@@ -31,6 +31,7 @@ runs:
         role-to-assume: ${{ inputs.hub_account_role }}
         role-duration-seconds: ${{ inputs.role_duration_seconds }}
         role-session-name: ${{ inputs.session_name }}
+        mask-aws-account-id: false
 
     - name: Assume Target Account Role
       uses: aws-actions/configure-aws-credentials@v1
@@ -42,3 +43,4 @@ runs:
         aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
+        mask-aws-account-id: false
