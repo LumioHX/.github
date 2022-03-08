@@ -1,0 +1,64 @@
+name: set up copilot docker build
+description: determine docker tag based on git sha, log in to ECR and check if tag already exists
+
+inputs:
+  service_name:
+    description: the copilot service name
+    required: true
+  forbid_build:
+    description: fail the build if the image tag doesn't already exist in ECR. useful to ensure we don't build a new image for production deploys.
+    required: false
+outputs:
+  tag:
+    description: the docker image tag to build (or already found)
+    value: ${{ steps.image-tag.outputs.tag }}
+  exists:
+    description: true if the docker image exists for this git sha already
+    value: ${{ steps.check-existing.outputs.exists }}
+
+runs:
+  using: composite
+  steps:
+    - name: get copilot app name
+      id: app-name
+      shell: bash
+      run: |
+        app=$(yq .application copilot/.workspace)
+        echo "::set-output name=name::$app"
+        echo "::set-output name=ecr::$app/${{inputs.service_name}}"
+    - name: log in to AWS ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: define image tag
+      id: image-tag
+      shell: bash
+      run: |
+        ref=$(git rev-parse --short HEAD)
+        tag="${{ steps.login-ecr.outputs.registry }}/${{ steps.app-name.outputs.ecr }}:${ref}"
+        echo '::set-output name=ref::'$ref
+        echo '::set-output name=tag::'$tag
+    - name: check if tag exists
+      id: check-existing
+      shell: bash
+      run: |
+        exitcode=0
+        output=$(aws ecr describe-images --repository-name ${{steps.app-name.outputs.ecr}} --image-ids imageTag=${{steps.image-tag.outputs.ref}} 2>&1) || exitcode=$?
+
+        if [[ $exitcode -eq 0 ]]; then
+          echo "image already exists: ${{steps.image-tag.outputs.tag}}"
+          echo '::set-output name=exists::true'
+        else
+          if echo $output | grep -q 'ImageNotFoundException'; then
+            echo "image does not exist: ${{steps.image-tag.outputs.tag}}"
+            # no set-output means it will evaluate to false
+          else
+            echo 'failed trying to query image existence'
+            exit 1
+          fi
+        fi
+    - name: fail if build required
+      if: inputs.forbid_build && !steps.check-existing.outputs.exists
+      shell: bash
+      run: |
+        echo image does not exist and forbid_build is set
+        exit 1
