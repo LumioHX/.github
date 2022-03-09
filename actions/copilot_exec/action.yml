@@ -15,6 +15,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: install deps
+      shell: bash
+      run: sudo apt-get install -y expect
     - name: copilot exec
       shell: bash
       # AWS SSM doesn't like non-TTY shells, this workaround
@@ -22,7 +25,11 @@ runs:
       # SSM also doesn't return the exit status of the command,
       # we work around that by echo'ing it to the output and parsing it out.
       run: |
-        command='/bin/sh -c '\''${{inputs.command}} ; echo EXEC-EXIT-CODE=$?'\''
-        unbuffer copilot svc exec -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }} -c "$command" | tee /tmp/exec-output
-        exitcode=$(sed -nr 's/EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output)
+        command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\$?'"
+        unbuffer copilot svc exec -e staging -c "$command" | tee /tmp/exec-output
+        exitcode=$(sed -nr 's/EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output | tr -d '\r\n')
+        if [ -z "$exitcode" ]; then
+          echo could not find exit code in copilot exec output
+          exit 1
+        fi
         exit $exitcode
