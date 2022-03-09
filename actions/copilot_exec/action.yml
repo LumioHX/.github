@@ -1,0 +1,28 @@
+name: copilot exec
+description: run a command in a running task using copilot exec
+
+inputs:
+  environment:
+    description: the copilot environment
+    required: true
+  service:
+    description: the copilot service, if more than one in this repo
+    required: false
+  command:
+    description: the command to exec in the running task
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: copilot exec
+      shell: bash
+      # AWS SSM doesn't like non-TTY shells, this workaround
+      # is discussed at https://github.com/aws/amazon-ssm-agent/issues/354
+      # SSM also doesn't return the exit status of the command,
+      # we work around that by echo'ing it to the output and parsing it out.
+      run: |
+        command='/bin/sh -c '\''${{inputs.command}} ; echo EXEC-EXIT-CODE=$?'\''
+        unbuffer copilot svc exec -e ${{ inputs.environment }} ${{ inputs.service && format('-n {0}', inputs.service) }} -c "$command" | tee /tmp/exec-output
+        exitcode=$(sed -nr 's/EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output)
+        exit $exitcode
