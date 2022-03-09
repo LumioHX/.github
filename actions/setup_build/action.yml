@@ -12,7 +12,7 @@ outputs:
   tag:
     description: the docker image tag to build (or already found)
     value: ${{ steps.image-tag.outputs.tag }}
-  exists:
+  tag_exists:
     description: true if the docker image exists for this git sha already
     value: ${{ steps.check-existing.outputs.exists }}
 
