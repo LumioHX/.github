@@ -1,0 +1,23 @@
+name: copilot deploy
+description: runs `copilot deploy` to deploy a service
+inputs:
+  environment:
+    description: the environment to deploy to
+    required: true
+  service:
+    description: the service name to deploy
+    required: true
+  image:
+    description: the docker image+tag to deploy (omit to build/use what is in manifest.yml)
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: write image tag to manifest
+      if: inputs.image
+      shell: bash
+      run: yq 'del(.image.build) | .image.location = "${{inputs.image}}"' -i copilot/${{inputs.service}}/manifest.yml
+    - name: deploy
+      shell: bash
+      run: copilot deploy -e ${{inputs.environment}} -n ${{inputs.service}}
