@@ -1,0 +1,16 @@
+name: copilot apply secrets
+description: apply the latest secrets from the sops .yml file
+inputs:
+  environment:
+    description: the environment to apply secrets to
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: install SOPS
+      uses: mdgreenwald/mozilla-sops-action@v1.2.0
+    - name: apply secrets
+      shell: bash
+      run: |
+        sops exec-file secrets-${{inputs.environment}}.yml  'copilot secret init --overwrite --cli-input-yaml {}'
