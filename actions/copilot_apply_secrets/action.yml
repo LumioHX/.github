@@ -4,6 +4,9 @@ inputs:
   environment:
     description: the environment to apply secrets to
     required: true
+  sops_file:
+    description: the full path to the sops file to apply
+    required: false
 
 runs:
   using: composite
@@ -13,4 +16,4 @@ runs:
     - name: apply secrets
       shell: bash
       run: |
-        sops exec-file secrets-${{inputs.environment}}.yml  'copilot secret init --overwrite --cli-input-yaml {}'
+        sops exec-file ${{ inputs.sops_file || format('secrets-{0}.yml', inputs.environment) }}  'copilot secret init --overwrite --cli-input-yaml {}'
