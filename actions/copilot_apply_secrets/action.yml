@@ -16,4 +16,9 @@ runs:
     - name: apply secrets
       shell: bash
       run: |
-        sops exec-file ${{ inputs.sops_file || format('secrets-{0}.yml', inputs.environment) }}  'copilot secret init --overwrite --cli-input-yaml {}'
+        infile=${{ inputs.sops_file || format('secrets-{0}.yml', inputs.environment) }}
+        outfile=/tmp/secrets-${{inputs.environment}}.yml
+
+        sops --decrypt --output=${outfile} ${infile}
+        copilot secret init --overwrite --cli-input-yaml ${outfile}
+        rm ${outfile}
