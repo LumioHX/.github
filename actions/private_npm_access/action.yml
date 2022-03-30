@@ -1,0 +1,17 @@
+name: private npm access
+description: set up .npmrc for access to our private npm packages
+inputs:
+  token:
+    description: the github access token to write to .npmrc
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: create .npmrc
+      shell: bash
+      run: |
+        cat <<EOF >.npmrc
+        @lumiohx:registry=https://npm.pkg.github.com
+        //npm.pkg.github.com/:_authToken=${{inputs.token}}
+        EOF
