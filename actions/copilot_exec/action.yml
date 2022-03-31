@@ -26,7 +26,7 @@ runs:
       # we work around that by echo'ing it to the output and parsing it out.
       run: |
         command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\$?'"
-        unbuffer copilot svc exec -e ${{inputs.environment}} ${{ inputs.service && format('-n {0}', inputs.service) }} -c "$command" | tee /tmp/exec-output
+        unbuffer copilot svc exec --yes -e ${{inputs.environment}} ${{ inputs.service && format('-n {0}', inputs.service) }} -c "$command" | tee /tmp/exec-output
         exitcode=$(sed -nr 's/EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output | tr -d '\r\n')
         if [ -z "$exitcode" ]; then
           echo could not find exit code in copilot exec output
