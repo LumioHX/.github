@@ -28,7 +28,7 @@ runs:
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ steps.env-role-arn.outputs.role-arn }}
-        role-duration-seconds: 3600
+        role-duration-seconds: "3600"
         role-session-name: ${{ inputs.session_name }}
         aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}

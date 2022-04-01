@@ -7,6 +7,10 @@ inputs:
   service:
     description: the service name
     required: true
+  aws_region:
+    description: AWS region
+    required: false
+    default: us-west-2
 
 runs:
   using: composite
@@ -17,10 +21,23 @@ runs:
       run: |
         app=$(yq .application copilot/.workspace)
         echo "::set-output name=name::$app"
-    - name: auth to env account
-      uses: LumioHX/.github/actions/copilot_auth_to_env_account@main
+    - name: Get Env Role ARN
+      id: env-role-arn
+      shell: bash
+      run: |
+        ROLE_ARN=$(copilot env show -n "${{inputs.environment}}" --json | jq -r .environment.managerRoleARN)
+        echo "::set-output name=role-arn::${ROLE_ARN}"
+    - name: Assume Env Account Role
+      uses: aws-actions/configure-aws-credentials@v1
       with:
-        environment: ${{inputs.environment}}
+        aws-region: ${{ inputs.aws_region }}
+        role-to-assume: ${{ steps.env-role-arn.outputs.role-arn }}
+        role-duration-seconds: "3600"
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
+        mask-aws-account-id: false
+        role-skip-session-tagging: true
     - name: cancel deploy
       shell: bash
       env:
