@@ -1,0 +1,42 @@
+name: copilot cancel deploy
+description: cancels a running copilot deploy via cloudformation
+inputs:
+  environment:
+    description: the environment name
+    required: true
+  service:
+    description: the service name
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: get copilot app name
+      id: app-name
+      shell: bash
+      run: |
+        app=$(yq .application copilot/.workspace)
+        echo "::set-output name=name::$app"
+    - name: auth to env account
+      uses: LumioHX/.github/actions/copilot_auth_to_env_account@main
+      with:
+        environment: ${{inputs.environment}}
+    - name: cancel deploy
+      shell: bash
+      env:
+        APP: "${{ steps.app-name.outputs.name }}"
+        ENV: "${{ inputs.environment }}"
+        SVC: "${{ inputs.service }}"
+      run: |
+        STACK="${APP}-${ENV}-${SVC}"
+        echo Cancelling CloudFormation stack \'"$STACK"\'
+
+        STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK" | jq -r '.Stacks[0].StackStatus')
+
+        if [[ "$STATUS" == "UPDATE_IN_PROGRESS" ]]; then
+            aws cloudformation cancel-update-stack --stack-name "$STACK"
+            echo Stack update cancelled, rollback in progress
+        else
+            echo Cannot cancel deploy, stack is in state \'$STATUS\'
+            exit 1
+        fi
