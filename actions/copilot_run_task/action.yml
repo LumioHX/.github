@@ -1,0 +1,61 @@
+name: copilot run task
+description: run a command in a new ECS task using copilot task run
+
+inputs:
+  environment:
+    description: the copilot environment
+    required: true
+  service:
+    description: the copilot service
+    required: true
+  image:
+    description: the docker image tag to use
+    required: true
+  name:
+    description: the name of the task
+    required: true
+  command:
+    description: the command to run (overrides the default docker image cmd)
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: install deps
+      shell: bash
+      run: sudo apt-get install -y expect
+    - name: get copilot app name
+      id: app-name
+      shell: bash
+      run: |
+        app=$(yq .application copilot/.workspace)
+        echo "::set-output name=name::$app"
+        echo "::set-output name=ecr::$app/${{inputs.service_name}}"
+    - name: copilot task run
+      shell: bash
+      # AWS SSM doesn't like non-TTY shells, this workaround
+      # is discussed at https://github.com/aws/amazon-ssm-agent/issues/354
+      # SSM also doesn't return the exit status of the command,
+      # we work around that by echo'ing it to the output and parsing it out.
+      env:
+        APP: ${{steps.app-name.outputs.name}}
+        ENV: ${{inputs.environment}}
+        SVC: ${{inputs.service}}
+        IMAGE: ${{inputs.image}}
+        NAME: ${{inputs.name}}
+      run: |
+        generated_command=$(copilot task run --generate-cmd $APP/$ENV/$SVC 2>&1 | tr -d "\n"'\\')
+        command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\$?'"
+        args="--follow --acknowledge-secrets-access --image $IMAGE --task-group-name $NAME"
+        full_command="$generated_command $args --command \"$command\""
+        echo 'running:'
+        echo $full_command
+
+        unbuffer $generated_command $args --command "$command" | tee /tmp/exec-output
+        exitcode=$(sed -nr 's/.* EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output | tr -d '\r\n')
+        echo got exit code "'$exitcode'"
+        if [ -z "$exitcode" ]; then
+          echo could not find exit code in copilot output
+          exit 1
+        fi
+        exit $exitcode
