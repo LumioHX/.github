@@ -15,6 +15,9 @@ outputs:
   tag_exists:
     description: true if the docker image exists for this git sha already
     value: ${{ steps.check-existing.outputs.exists }}
+  git_sha_short:
+    description: the short git sha (used in the docker tag as well)
+    value: ${{ steps.image-tag.outputs.ref }}
 
 runs:
   using: composite
