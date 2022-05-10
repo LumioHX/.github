@@ -34,9 +34,16 @@ runs:
       shell: bash
       run: |
         ref=$(git rev-parse --short HEAD)
+        longref=$(git rev-parse HEAD)
         tag="${{ steps.login-ecr.outputs.registry }}/${{ steps.app-name.outputs.ecr }}:${ref}"
         echo '::set-output name=ref::'$ref
+        echo '::set-output name=longref::'$longref
         echo '::set-output name=tag::'$tag
+    - name: write out version file
+      shell: bash
+      run: |
+        mkdir -p lumio-platform
+        yq -n '.git-sha.short = "${{ steps.image-tag.outputs.ref }}" | .git-sha.long = "${{ steps.image-tag.outputs.longref }}"' > lumio-platform/app-version.yml
     - name: check if tag exists
       id: check-existing
       shell: bash
