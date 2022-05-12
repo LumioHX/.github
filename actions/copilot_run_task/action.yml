@@ -35,6 +35,7 @@ runs:
       shell: bash
       # AWS SSM doesn't like non-TTY shells, this workaround
       # is discussed at https://github.com/aws/amazon-ssm-agent/issues/354
+      # the workaround is running the command through unbuffer.
       # SSM also doesn't return the exit status of the command,
       # we work around that by echo'ing it to the output and parsing it out.
       env:
@@ -51,7 +52,7 @@ runs:
         echo 'running:'
         echo $full_command
 
-        unbuffer $generated_command $args --command "$command" | tee /tmp/exec-output
+        eval unbuffer $generated_command $args --command \"$command\" | tee /tmp/exec-output
         exitcode=$(sed -nr 's/.* EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output | tr -d '\r\n')
         echo got exit code "'$exitcode'"
         if [ -z "$exitcode" ]; then
