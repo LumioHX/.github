@@ -12,6 +12,9 @@ outputs:
   tag:
     description: the docker image tag to build (or already found)
     value: ${{ steps.image-tag.outputs.tag }}
+  tag_latest:
+    description: the docker image tag for :latest
+    value: ${{ steps.image-tag.outputs.tag_latest }}
   tag_exists:
     description: true if the docker image exists for this git sha already
     value: ${{ steps.check-existing.outputs.exists }}
@@ -39,9 +42,11 @@ runs:
         ref=$(git rev-parse --short HEAD)
         longref=$(git rev-parse HEAD)
         tag="${{ steps.login-ecr.outputs.registry }}/${{ steps.app-name.outputs.ecr }}:${ref}"
+        tag_latest="${{ steps.login-ecr.outputs.registry }}/${{ steps.app-name.outputs.ecr }}:latest"
         echo '::set-output name=ref::'$ref
         echo '::set-output name=longref::'$longref
         echo '::set-output name=tag::'$tag
+        echo '::set-output name=tag_latest::'$tag_latest
     - name: write out version file
       shell: bash
       run: |
