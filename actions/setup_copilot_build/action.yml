@@ -15,9 +15,12 @@ outputs:
   tag:
     description: the docker image tag to build (or already found)
     value: ${{ steps.image-tag.outputs.tag }}
-  other_tags:
-    description: space-separated list of other suggested docker image tags (:latest and :environment_name)
-    value: ${{ steps.image-tag.outputs.other_tags }}
+  tag_latest:
+    description: docker image tag for :latest
+    value: ${{ steps.image-tag.outputs.tag_latest }}
+  tag_environment:
+    description: docker image tag for environment, if given as input
+    value: ${{ steps.image-tag.outputs.tag_environment }}
   tag_exists:
     description: true if the docker image exists for this git sha already
     value: ${{ steps.check-existing.outputs.exists }}
@@ -48,12 +51,13 @@ runs:
         tag="${base_img}:${ref}"
         tag_latest="${base_img}:latest"
         if [[ -n "${{inputs.environment}}" ]]; then
-          tag_env="${base_img}:${{inputs.environment}}"
+          tag_environment="${base_img}:${{inputs.environment}}"
         fi
         echo '::set-output name=ref::'$ref
         echo '::set-output name=longref::'$longref
         echo '::set-output name=tag::'$tag
-        echo '::set-output name=other_tags::'"$tag_latest $tag_env"
+        echo '::set-output name=tag_latest::'$tag_latest
+        echo '::set-output name=tag_environment::'$tag_environment
     - name: write out version file
       shell: bash
       run: |
