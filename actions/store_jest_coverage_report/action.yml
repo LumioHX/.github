@@ -30,9 +30,9 @@ runs:
         svc: ${{ inputs.service_name }}
       run: |
         # store the HTML and JSON reports
-        cd ./coverage-repo
-        rm -rf ./docs/coverage/$svc
-        mv ../${{inputs.coverage_dir}} ./docs/coverage/$svc
+        cd ./coverage-repo/docs
+        rm -rf ./coverage/$svc
+        mv ../../${{inputs.coverage_dir}} ./coverage/$svc
 
         # update the data list of runs
         touch _data/coverage/$svc.yml
