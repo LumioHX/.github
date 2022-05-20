@@ -1,0 +1,45 @@
+name: store jest coverage report
+description: store jest's coverage output to our shared site
+inputs:
+  coverage_repo:
+    description: the coverage github repo
+    required: true
+  coverage_dir:
+    description: the coverage output dir to store
+    required: true
+  service_name:
+    description: service name to show in coverage repo
+    required: true
+  token:
+    description: github access token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: checkout coverage repo
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ inputs.coverage_repo }}
+        token: ${{ inputs.token }}
+        path: coverage-repo
+
+    - name: commit coverage repo
+      shell: bash
+      env:
+        svc: ${{ inputs.service_name }}
+      run: |
+        # store the HTML and JSON reports
+        cd ./coverage-repo
+        rm -rf ./docs/coverage/$svc
+        mv ../${{inputs.coverage_dir}} ./docs/coverage/$svc
+
+        # update the data list of runs
+        touch _data/coverage/$svc.yml
+        yq -i '.runs += [{ "time": now, "summary": load("coverage/$svc/coverage-summary.json").total }]' _data/coverage/$svc.yml
+
+        git config --local user.email "github-bot@lumio.com"
+        git config --local user.name "LumioBot"
+        git add .
+        git commit -m "$svc coverage report"
+        git push
