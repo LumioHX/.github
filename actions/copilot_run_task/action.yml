@@ -46,7 +46,7 @@ runs:
         NAME: ${{inputs.name}}
       run: |
         generated_command=$(copilot task run --generate-cmd $APP/$ENV/$SVC 2>&1 | tr -d "\n"'\\')
-        command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\$?'"
+        command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\\\$?'"
         args="--follow --acknowledge-secrets-access --image $IMAGE --task-group-name $NAME"
         full_command="$generated_command $args --command \"$command\""
         echo 'running:'
