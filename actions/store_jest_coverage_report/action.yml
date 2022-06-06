@@ -38,6 +38,13 @@ runs:
         touch _data/coverage/$svc.yml
         yq -i '.runs += [{ "time": now, "summary": load("coverage/'$svc'/coverage-summary.json").total }]' _data/coverage/$svc.yml
 
+        # ensure service page
+        cat >_services/$svc.md <<EOF
+        ---
+        service: $svc
+        ---
+        EOF
+
         git config --local user.email "github-bot@lumio.com"
         git config --local user.name "LumioBot"
         git add .
