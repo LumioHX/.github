@@ -18,6 +18,12 @@ runs:
       if: inputs.image
       shell: bash
       run: yq 'del(.image.build) | .image.location = "${{inputs.image}}"' -i copilot/${{inputs.service}}/manifest.yml
+    # for now we need to pass --force here, copilot devs are looking
+    # at changing the exit status when there are no changes to the env.
+    # https://github.com/aws/copilot-cli/issues/3927
+    - name: update copilot env
+      shell: bash
+      run: copilot env deploy -n ${{inputs.environment}} --force
     - name: deploy
       shell: bash
       run: copilot deploy -e ${{inputs.environment}} -n ${{inputs.service}}
