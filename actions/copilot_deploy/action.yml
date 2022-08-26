@@ -26,4 +26,4 @@ runs:
       run: copilot env deploy -n ${{inputs.environment}} --force
     - name: deploy
       shell: bash
-      run: copilot deploy -e ${{inputs.environment}} -n ${{inputs.service}}
+      run: copilot deploy -e ${{inputs.environment}} -n ${{inputs.service}} --force
