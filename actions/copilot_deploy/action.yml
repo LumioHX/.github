@@ -23,7 +23,10 @@ runs:
     # https://github.com/aws/copilot-cli/issues/3927
     - name: update copilot env
       shell: bash
-      run: copilot env deploy -n ${{inputs.environment}} --force
+      run: |
+        if [[ -f copilot/environments/${{inputs.environment}}/manifest.yml ]]; then
+          copilot env deploy -n ${{inputs.environment}} --force
+        fi
     - name: deploy
       shell: bash
       run: copilot deploy -e ${{inputs.environment}} -n ${{inputs.service}} --force
