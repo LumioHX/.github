@@ -45,14 +45,24 @@ runs:
         IMAGE: ${{inputs.image}}
         NAME: ${{inputs.name}}
       run: |
-        generated_command=$(copilot task run --generate-cmd $APP/$ENV/$SVC 2>&1 | tr -d "\n"'\\')
-        command="/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\\\$?'"
-        args="--follow --acknowledge-secrets-access --image $IMAGE --task-group-name $NAME"
-        full_command="$generated_command $args --command \"$command\""
-        echo 'running:'
-        echo $full_command
+        fname=generated_command.sh
+        echo 'unbuffer \' >$fname
+        # using sed to append a backslash to the last line, so we can
+        # continue to add more flags on subsequent lines.
+        (copilot task run --generate-cmd $APP/$ENV/$SVC 2>&1 | sed '$ s/$/ \\/') >>$fname
+        cat <<EOF >>$fname
+        --follow \\
+        --acknowledge-secrets-access \\
+        --image $IMAGE \\
+        --task-group-name $NAME \\
+        EOF
+        echo "--command \"/bin/sh -c '${{inputs.command}} ; echo EXEC-EXIT-CODE=\\\$?'\"" >>$fname
 
-        eval unbuffer $generated_command $args --command \"$command\" | tee /tmp/exec-output
+        echo 'running command:'
+        cat $fname
+        echo ''
+
+        source $fname | tee /tmp/exec-output
         exitcode=$(sed -nr 's/.* EXEC-EXIT-CODE=([0-9]+)/\1/p' /tmp/exec-output | tr -d '\r\n')
         echo got exit code "'$exitcode'"
         if [ -z "$exitcode" ]; then
