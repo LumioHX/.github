@@ -1,0 +1,50 @@
+name: set up and log in to tailscale
+description: use oauth id/secret to generate authkey, then install and login to tailscale
+
+inputs:
+  tailnet:
+    description: the tailnet id to join
+    required: true
+  oauth_id:
+    description: the tailscale oauth client id
+    required: true
+  oauth_secret:
+    description: the tailscale oauth client secret
+    required: true
+  tag:
+    description: the tag to apply to this node, without 'tag:' prefix
+    required: true
+  tailscale_version:
+    description: tailscale version to install
+    required: false
+    default: '1.26.0'
+
+runs:
+  using: composite
+  steps:
+    - id: get_api_token
+      shell: bash
+      run: |
+        api_token=$(curl --fail -d "client_id=${{inputs.oauth_id}}" -d "client_secret=${{inputs.oauth_secret}}" https://api.tailscale.com/api/v2/oauth/token | jq -r .access_token)
+        echo "api_token=${api_token}" >> $GITHUB_OUTPUT
+    - id: get_auth_key
+      shell: bash
+      run: |
+        auth_key=$(echo '{
+          "capabilities": {
+            "devices": {
+              "create": {
+                "reusable": false,
+                "ephemeral": true,
+                "tags": ["tag:${{inputs.tag}}"]
+              }
+            }
+          },
+          "expirySeconds": 600
+        }' | curl --fail -X POST --data-binary @- -H "Content-Type: application/json" -u "${{steps.get_api_token.outputs.api_token}}:" https://api.tailscale.com/api/v2/tailnet/${{inputs.tailnet}}/keys | jq -r .key)
+        echo "auth_key=${auth_key}" >> $GITHUB_OUTPUT
+    - name: tailscale auth
+      uses: tailscale/github-action@v1
+      with:
+        authkey: ${{ steps.get_auth_key.outputs.auth_key }}
+        version: ${{ inputs.tailscale_version }}
