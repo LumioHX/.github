@@ -1,0 +1,35 @@
+name: copilot status
+description: get current status of a deployed environment
+
+inputs:
+  service:
+    description: the copilot service name
+    required: true
+  environment:
+    description: if specified, a docker tag for the environment will be returned as well.
+    required: false
+outputs:
+  image:
+    description: the full deployed image name
+    value: ${{ steps.get-status.outputs.image }}
+  tag:
+    description: the deployed image tag
+    value: ${{ steps.get-status.outputs.tag }}
+  last_deploy:
+    description: timestamp of the last deploy
+    value: ${{ steps.get-status.outputs.last_deploy }}
+
+runs:
+  using: composite
+  steps:
+    - name: get status
+      id: get-status
+      shell: bash
+      run: |
+        status=$(copilot svc status -e ${{inputs.environment}} -n ${{inputs.service}} --json)
+        image=$(echo $status|jq -r '.tasks[0].images[].ID'|grep ${{inputs.service}})
+        echo image=$image >> $GITHUB_OUTPUT
+        tag=$(echo $image|cut -d: -f2)
+        echo tag=$tag >> $GITHUB_OUTPUT
+        last_deploy=$(echo $status|jq -r '.Service.lastDeploymentAt')
+        echo last_deploy=$last_deploy >> $GITHUB_OUTPUT
