@@ -27,13 +27,11 @@ runs:
       if: inputs.only_if_changed_since
       shell: bash
       run: |
-        git diff --quiet ${{inputs.only_if_changed_since}} HEAD -- ${{steps.file-path.outputs.path}}
-        if [[ $? == 0 ]]; then
+        if git diff --quiet ${{inputs.only_if_changed_since}} HEAD -- ${{steps.file-path.outputs.path}}; then
           echo secrets file has not changed
           echo unchanged=1 >> $GITHUB_OUTPUT
         else
           echo secrets file has changed
-          echo unchanged=0 >> $GITHUB_OUTPUT
         fi
     - name: apply secrets
       shell: bash

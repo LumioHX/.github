@@ -17,21 +17,41 @@ inputs:
   command:
     description: the command to run (overrides the default docker image cmd)
     required: false
+  only_if_changed_since:
+    description: if given, will git diff between this ref and HEAD and only apply if the specified path has changed
+    required: false
+  only_if_changed_path:
+    description: repo path to check with only_if_changed_since
+    required: false
 
 runs:
   using: composite
   steps:
-    - name: install deps
-      shell: bash
-      run: sudo apt-get install -y expect
     - name: get copilot app name
       id: app-name
       shell: bash
       run: |
         app=$(yq .application copilot/.workspace)
-        echo "::set-output name=name::$app"
-        echo "::set-output name=ecr::$app/${{inputs.service_name}}"
+        echo name=$app >> $GITHUB_OUTPUT
+        echo "ecr=$app/${{inputs.service_name}}" >> $GITHUB_OUTPUT
+    - name: check git diff
+      id: check-diff
+      if: inputs.only_if_changed_since
+      shell: bash
+      run: |
+        path=${{inputs.only_if_changed_path}}
+        if git diff --quiet ${{inputs.only_if_changed_since}} HEAD -- "$path"; then
+          echo "path '$path' has not changed"
+          echo unchanged=1 >> $GITHUB_OUTPUT
+        else
+          echo "path '$path' has changed"
+        fi
+    - name: install deps
+      if: '!steps.check-diff.outputs.unchanged'
+      shell: bash
+      run: sudo apt-get install -y expect
     - name: copilot task run
+      if: '!steps.check-diff.outputs.unchanged'
       shell: bash
       # AWS SSM doesn't like non-TTY shells, this workaround
       # is discussed at https://github.com/aws/amazon-ssm-agent/issues/354
