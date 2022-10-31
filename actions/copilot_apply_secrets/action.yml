@@ -7,18 +7,40 @@ inputs:
   sops_file:
     description: the full path to the sops file to apply
     required: false
+  only_if_changed_since:
+    description: if given, will git diff the sops file between this ref and HEAD and only apply if it has changed
+    required: false
 
 runs:
   using: composite
   steps:
     - name: install SOPS
       uses: mdgreenwald/mozilla-sops-action@v1.2.0
-    - name: apply secrets
+    - name: get file path
+      id: file-path
       shell: bash
       run: |
-        infile=${{ inputs.sops_file || format('secrets-{0}.yml', inputs.environment) }}
+        path=${{ inputs.sops_file || format('secrets-{0}.yml', inputs.environment) }}
+        echo path=$path >> $GITHUB_OUTPUT
+    - name: check git diff
+      id: check-diff
+      if: inputs.only_if_changed_since
+      shell: bash
+      run: |
+        git diff --quiet ${{inputs.only_if_changed_since}} HEAD -- ${{steps.file-path.outputs.path}}
+        if [[ $? == 0 ]]; then
+          echo secrets file has not changed
+          echo unchanged=1 >> $GITHUB_OUTPUT
+        else
+          echo secrets file has changed
+          echo unchanged=0 >> $GITHUB_OUTPUT
+        fi
+    - name: apply secrets
+      shell: bash
+      if: '!steps.check-diff.outputs.unchanged'
+      run: |
         outfile=/tmp/secrets-${{inputs.environment}}.yml
 
-        sops --decrypt --output=${outfile} ${infile}
+        sops --decrypt --output=${outfile} ${{steps.file-path.outputs.path}}
         copilot secret init --overwrite --cli-input-yaml ${outfile}
         rm ${outfile}
