@@ -36,8 +36,8 @@ runs:
       shell: bash
       run: |
         app=$(yq .application copilot/.workspace)
-        echo "::set-output name=name::$app"
-        echo "::set-output name=ecr::$app/${{inputs.service_name}}"
+        echo "name=$app" >> $GITHUB_OUTPUT
+        echo "ecr=$app/${{inputs.service_name}}" >> $GITHUB_OUTPUT
     - name: log in to AWS ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
@@ -53,11 +53,11 @@ runs:
         if [[ -n "${{inputs.environment}}" ]]; then
           tag_environment="${base_img}:${{inputs.environment}}"
         fi
-        echo '::set-output name=ref::'$ref
-        echo '::set-output name=longref::'$longref
-        echo '::set-output name=tag::'$tag
-        echo '::set-output name=tag_latest::'$tag_latest
-        echo '::set-output name=tag_environment::'$tag_environment
+        echo 'ref='$ref >> $GITHUB_OUTPUT
+        echo 'longref='$longref >> $GITHUB_OUTPUT
+        echo 'tag='$tag >> $GITHUB_OUTPUT
+        echo 'tag_latest='$tag_latest >> $GITHUB_OUTPUT
+        echo 'tag_environment='$tag_environment >> $GITHUB_OUTPUT
     - name: write out version file
       shell: bash
       run: |
@@ -72,11 +72,11 @@ runs:
 
         if [[ $exitcode -eq 0 ]]; then
           echo "image already exists: ${{steps.image-tag.outputs.tag}}"
-          echo '::set-output name=exists::true'
+          echo 'exists=true' >> $GITHUB_OUTPUT
         else
           if echo $output | grep -q 'ImageNotFoundException'; then
             echo "image does not exist: ${{steps.image-tag.outputs.tag}}"
-            # no set-output means it will evaluate to false
+            # no writing to $GITHUB_OUTPUT means it will evaluate to false
           else
             echo 'failed trying to query image existence'
             exit 1
