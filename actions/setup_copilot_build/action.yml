@@ -53,11 +53,11 @@ runs:
         if [[ -n "${{inputs.environment}}" ]]; then
           tag_environment="${base_img}:${{inputs.environment}}"
         fi
-        echo 'ref='$ref >> $GITHUB_OUTPUT
-        echo 'longref='$longref >> $GITHUB_OUTPUT
-        echo 'tag='$tag >> $GITHUB_OUTPUT
-        echo 'tag_latest='$tag_latest >> $GITHUB_OUTPUT
-        echo 'tag_environment='$tag_environment >> $GITHUB_OUTPUT
+        echo "ref=$ref" >> $GITHUB_OUTPUT
+        echo "longref=$longref" >> $GITHUB_OUTPUT
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+        echo "tag_latest=$tag_latest" >> $GITHUB_OUTPUT
+        echo "tag_environment=$tag_environment" >> $GITHUB_OUTPUT
     - name: write out version file
       shell: bash
       run: |
