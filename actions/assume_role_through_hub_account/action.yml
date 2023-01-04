@@ -25,7 +25,7 @@ runs:
   using: "composite"
   steps:
     - name: Assume Hub Account Role
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v1-node16
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.hub_account_role }}
@@ -34,7 +34,7 @@ runs:
         mask-aws-account-id: false
 
     - name: Assume Target Account Role
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v1-node16
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.target_account_role }}
