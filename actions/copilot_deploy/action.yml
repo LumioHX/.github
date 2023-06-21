@@ -10,6 +10,10 @@ inputs:
   image:
     description: the docker image+tag to deploy (omit to build/use what is in manifest.yml)
     required: false
+  update_env:
+    description: If the copilot env should be updated. Useful for when multiple jobs are deploying in parallel
+    required: false
+    default: true
 
 runs:
   using: composite
@@ -24,7 +28,7 @@ runs:
     - name: update copilot env
       shell: bash
       run: |
-        if [[ -f copilot/environments/${{inputs.environment}}/manifest.yml ]]; then
+        if [[ -f copilot/environments/${{inputs.environment}}/manifest.yml && ${{inputs.update_env}} == 'true' ]]; then
           copilot env deploy -n ${{inputs.environment}} --force
         fi
     - name: deploy
