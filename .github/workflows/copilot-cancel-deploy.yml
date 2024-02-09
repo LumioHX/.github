@@ -74,7 +74,7 @@ jobs:
           ENV: "${{ inputs.environment }}"
         run: |
           ROLE_ARN=$(copilot env show -n "$ENV" --json | jq -r .environment.managerRoleARN)
-          echo "::set-output name=role-arn::${ROLE_ARN}"
+          echo "role-arn=${ROLE_ARN}" >> $GITHUB_OUTPUT
 
       - name: Assume Env Account Role
         uses: aws-actions/configure-aws-credentials@v1
