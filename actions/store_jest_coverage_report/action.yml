@@ -18,7 +18,7 @@ runs:
   using: composite
   steps:
     - name: checkout coverage repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: ${{ inputs.coverage_repo }}
         token: ${{ inputs.token }}
